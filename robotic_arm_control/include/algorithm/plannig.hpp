@@ -10,10 +10,9 @@ namespace RoboticArm{
         class Planning: public Interfaces::PlanningBaseInterface{
             public:
             Planning();
-            Trajectory Executable(const float step,Eigen::Matrix4f pose)override;
-            Trajectory Executable(Eigen::Matrix4f pose)override;
-            Trajectory Executable(Eigen::Matrix4f now_pose,Eigen::Matrix4f target_pose,
-            const float step)override;
+            bool Executable(const float step,Eigen::Matrix4f start_pose,Eigen::Matrix4f end_pose,
+                                    Trajectory &tarjectory)override;
+            virtual bool Executable(Eigen::Matrix4f start_pose,Eigen::Matrix4f end_pose,Trajectory &tarjectory)override;
             private:
             RoboticArm::Interfaces::KinematicBaseInterface * kinematic_base_;
         };

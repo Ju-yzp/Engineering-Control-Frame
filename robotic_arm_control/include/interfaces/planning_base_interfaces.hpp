@@ -14,10 +14,10 @@ namespace RoboticArm{
         class PlanningBaseInterface{
             public:
             virtual ~PlanningBaseInterface()=default;
-            virtual Trajectory Executable(const float step,Eigen::Matrix4f pose) = 0;
-            virtual Trajectory Executable(Eigen::Matrix4f pose)=0;
-            virtual Trajectory Executable(Eigen::Matrix4f now_pose,Eigen::Matrix4f target_pose,
-            const float step)=0;
+            virtual bool Executable(const float step,Eigen::Matrix4f start_pose,Eigen::Matrix4f end_pose,
+                                    Trajectory &tarjectory)=0;
+            virtual bool Executable(Eigen::Matrix4f start_pose,Eigen::Matrix4f end_pose,Trajectory &tarjectory)=0;
+            virtual bool Executable(Eigen::Matrix4f end_pose,Trajectory &tarjectory)=0;
         };
     }
 }
