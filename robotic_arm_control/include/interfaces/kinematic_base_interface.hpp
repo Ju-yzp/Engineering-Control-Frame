@@ -10,7 +10,7 @@
 #include<Eigen/Eigen>
 #include<Eigen/Dense>
 //custom data types
-#include"structs/solutions_struct.hpp"
+#include"data_types/solutions_struct.hpp"
 
 namespace RoboticArm{
     namespace Interfaces{

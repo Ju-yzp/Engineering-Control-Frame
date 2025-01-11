@@ -7,7 +7,7 @@
 //cpp system
 #include<memory>
 //custom data types
-#include"structs/trajectory_struct.hpp"
+#include"data_types/trajectory_struct.hpp"
 //base interfaces
 namespace RoboticArm{
     namespace Interfaces{
