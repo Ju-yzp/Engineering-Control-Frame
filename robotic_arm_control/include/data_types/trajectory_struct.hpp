@@ -1,43 +1,22 @@
-#ifndef STRUCTS_TRAJECTOTY_STRUCT_HPP_
-#define STRUCTS_TRAJECTOTY_STRUCT_HPP_
+#ifndef DATA_TYPES_TRAJECTOTY_STRUCT_HPP_
+#define DATA_TYPES_TRAJECTOTY_STRUCT_HPP_
 
 #include<deque>
-#include<memory>
 
+#include<mutex>
 #include"data_types/solutions_struct.hpp"
 
 namespace RoboticArm{
-    typedef struct{
+    struct Trajectory{
         public:
-        Solutions pop_front(){
-            Solutions result = plan_tarjectory.front();
-            plan_tarjectory.pop_front();
-            return result;
-        }
-        void push_back(Solutions solution){
-            plan_tarjectory.push_back(solution);
-        }
-        void clear(){
-            plan_tarjectory.clear();
-        }
-        bool empty(){
-            return plan_tarjectory.empty();
-        }
-        const size_t size()const{
-            return plan_tarjectory.size();
-        }
-        Solutions front()const{
-            return plan_tarjectory.front();
-        }
-        Solutions back()const{
-            return plan_tarjectory.back();
-        }   
-        Solutions operator[](size_t index){
-            return plan_tarjectory[index];
-        }
+        void push_back(Solutions &solutions);
+        void emplace_back(Solutions &solutions);
+        const std::size_t size();
+        Solutions pop_front();
         private:
+        std::mutex data_safe_mutex_;
         std::deque<Solutions> plan_tarjectory;
-    }Trajectory;
+    };
 }
 
 #endif

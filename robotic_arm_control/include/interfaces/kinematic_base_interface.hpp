@@ -1,11 +1,5 @@
 #ifndef INTERFACES_KINEMATIC_BASE_INTERFACE_HPP_
 #define INTERFACES_KINEMATIC_BASE_INTERFACE_HPP_
-//cpp system
-#include<memory>
-#include<thread>
-#include<mutex>
-#include<algorithm>
-#include<functional>
 //eigen library
 #include<Eigen/Eigen>
 #include<Eigen/Dense>

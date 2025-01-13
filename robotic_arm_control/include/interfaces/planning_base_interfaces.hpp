@@ -4,8 +4,6 @@
 //eigen  library
 #include<Eigen/Eigen>
 #include<Eigen/Dense>
-//cpp system
-#include<memory>
 //custom data types
 #include"data_types/trajectory_struct.hpp"
 //base interfaces
@@ -16,8 +14,6 @@ namespace RoboticArm{
             virtual ~PlanningBaseInterface()=default;
             virtual bool Executable(const float step,Eigen::Matrix4f start_pose,Eigen::Matrix4f end_pose,
                                     Trajectory &tarjectory)=0;
-            virtual bool Executable(Eigen::Matrix4f start_pose,Eigen::Matrix4f end_pose,Trajectory &tarjectory)=0;
-            virtual bool Executable(Eigen::Matrix4f end_pose,Trajectory &tarjectory)=0;
         };
     }
 }

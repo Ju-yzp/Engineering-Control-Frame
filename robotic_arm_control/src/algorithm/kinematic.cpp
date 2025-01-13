@@ -4,15 +4,23 @@
 
 namespace RoboticArm{
     namespace Algorithm{
-        inline const float& Kinematic<float>::GetConstParam(const int col,const int row){
+        Kinematic::Kinematic(rclcpp::Node *node):
+        node_(node)
+        {}
+
+        Kinematic::Kinematic():
+        node_(new rclcpp::Node(""))
+        {}
+
+        inline const float& Kinematic::GetConstParam(const int col,const int row)const{
             return DH_Table[col][row];
         }
 
-        inline float& Kinematic<float>::GetParam(const int col,const int row){
+        inline float& Kinematic::GetParam(const int col,const int row){
             return DH_Table[col][row];
         }
 
-        Eigen::Matrix4f Kinematic<float>::FrameRealtionShip(float theta,float alpha,float a ,float d){
+        Eigen::Matrix4f FrameRealtionShip(float theta,float alpha,float a ,float d){
             Eigen::Matrix4f matrix_;
             float cos_alpha = cos(alpha);
             float sin_alpha = sin(alpha);
@@ -31,13 +39,13 @@ namespace RoboticArm{
         *solutions:关节偏移角度解
         */
        
-        bool Kinematic<float>::SolveIK(Eigen::Matrix4f pose,Solutions &solutions){
-            float x_{pose(0,3)},y_{pose(1,3)},z_{pose(2,3)};
+        bool Kinematic::SolveIK(Eigen::Matrix4f pose,Solutions &solutions){
+            float x_{pose(0,3)},y_{pose(1,3)};//,z_{pose(2,3)};
             float a1_,d2_,d4_,a2_;
-            a1_ = Kinematic<float>::GetConstParam(1,1);
-            d2_ = Kinematic<float>::GetConstParam(2,1);
-            d4_ = Kinematic<float>::GetConstParam(1,2);
-            a2_ = Kinematic<float>::GetConstParam(3,2);
+            a1_ = GetConstParam(1,1);
+            d2_ = GetConstParam(2,1);
+            d4_ = GetConstParam(1,2);
+            a2_ = GetConstParam(3,2);
 
             float len_ = sqrtf(powf(x_,2)+powf(y_,2));
             float xoy_len_ = sqrtf(powf(len_,2)-powf(d2_,2));
@@ -48,8 +56,10 @@ namespace RoboticArm{
             theta1_  -= temp_theta_;
 
             //通过三角形构成的长度原理判定能否到达目标位姿
-            if((a2_+d4_) <xoy_len_ || (d4_-a2_) > xoy_len_)
-            return false;
+            if((a2_+d4_) <xoy_len_ || (d4_-a2_) > xoy_len_){
+                RCLCPP_WARN(node_->get_logger(),"");
+                return false;
+            }
 
             //继续求解电机2，3的角度解
             Eigen::Matrix4f Transfrom1to0 = FrameRealtionShip(theta1_,GetConstParam(0,0),GetConstParam(0,1),GetConstParam(0,2));
@@ -73,8 +83,10 @@ namespace RoboticArm{
             float theta2_2 = -theta2_ - temp_theta_1;
             float theta3_2 = M_PIf*1.5f - theta3_;
             //如果出现nan值，说明解不存在
-            if(std::isnan(theta2_1)||std::isnan(theta2_2)||std::isnan(theta3_2)||std::isnan(theta3_1))
-            return false;
+            if(std::isnan(theta2_1)||std::isnan(theta2_2)||std::isnan(theta3_2)||std::isnan(theta3_1)){
+                RCLCPP_WARN(node_->get_logger(),"");
+                return false;
+            }
             Solutions solution1_,solution2_;
             solution1_.theta1_ = theta1_;
             solution1_.theta2_ = theta2_1;
@@ -82,8 +94,10 @@ namespace RoboticArm{
             bool flag2 = SolveWristPart(pose,solution2_);
             if(!flag1)
             {
-                if(!flag2)
-                return false;
+                if(!flag2){
+                    RCLCPP_WARN(node_->get_logger(),"Don't has vail solutions !");
+                    return false;
+                }
                 else{
                     solutions = solution2_;
                     return true;
@@ -96,8 +110,8 @@ namespace RoboticArm{
         /*
         *求解腕部关节角度
         */
-        bool Kinematic<float>::SolveWristPart(Eigen::Matrix4f pose,Solutions &solutions){
-            Eigen::Matrix4f transfrom1to0_,transfrom2to1_,transfrom3to2_,
+        bool Kinematic::SolveWristPart(Eigen::Matrix4f pose,Solutions &solutions){
+            Eigen::Matrix4f transfrom1to0_,transfrom2to1_,transfrom3to2_;
             transfrom1to0_ = FrameRealtionShip(solutions.theta1_,GetConstParam(0,0),GetConstParam(0,1),GetConstParam(0,2));
             transfrom2to1_ = FrameRealtionShip(solutions.theta2_,GetConstParam(1,0),GetConstParam(1,1),GetConstParam(1,2));
             transfrom3to2_ = FrameRealtionShip(solutions.theta3_,GetConstParam(2,0),GetConstParam(2,1),GetConstParam(2,2));
@@ -125,7 +139,8 @@ namespace RoboticArm{
                 theta6_ = atan2f(transfrom6to3_(1,1)/sinf(theta5_),-transfrom6to3_(1,0)/sinf(theta5_));
             }
             if(std::isnan(theta4_)||std::isnan(theta5_)||std::isnan(theta6_))
-            return false;
+              return false;
+
             solutions.theta4_ = theta4_;
             solutions.theta5_ = theta5_;
             solutions.theta6_ = theta6_;
@@ -136,7 +151,7 @@ namespace RoboticArm{
         *pose：机械臂末端目标位姿
         *solutions:通过逆运动学解算得到的解集
         */
-        bool Kinematic<float>::SolveFk(Eigen::Matrix4f pose,const Solutions solutions){
+        bool Kinematic::SolveFk(Eigen::Matrix4f pose,const Solutions solutions){
             Eigen::Matrix4f transfrom1to0_,transfrom2to1_,transfrom3to2_,
                             Transfrom4to3_,Transfrom5to4_,Transfrom6to5_;
             transfrom1to0_ = FrameRealtionShip(solutions.theta1_,GetConstParam(0,0),GetConstParam(0,1),GetConstParam(0,2));
@@ -152,6 +167,22 @@ namespace RoboticArm{
                                             transfrom3to2_ *
                                             Transfrom5to4_ *
                                             Transfrom6to5_;
+            Eigen::Matrix4f error_matrix_ = pose - Transfrom6to0;
+            float position_error_{0},rotation_error_{0};
+            for(int i = 0 ;i < 3;i++){
+                for(int j = 0;j < 3;j++){
+                    rotation_error_ += powf(error_matrix_(i,j),2);
+                }
+                position_error_ += powf(error_matrix_(i,3),2);
+            }
+            constexpr float position_error_stand{20};
+            constexpr float rotation_error_stand{0.12};
+            if(rotation_error_ < rotation_error_stand && position_error_ < position_error_stand){
+                return true;
+            }else{
+                RCLCPP_WARN(node_->get_logger(),"");
+                return false;
+            }
         }
     }
 }

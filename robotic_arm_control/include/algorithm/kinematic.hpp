@@ -3,20 +3,30 @@
 //base interfaces
 #include"interfaces/kinematic_base_interface.hpp"
 
+//ros
+#include<rclcpp/node.hpp>
+#include"detail/macros.hpp"
+
+//cpp system
+#include<memory>
+
 namespace RoboticArm{
     namespace Algorithm{
-        template <typename Ty_>
-        class Kinematic:public Interfaces::KinematicBaseInterface<Ty_>{
+        Eigen::Matrix4f FrameRealtionShip(float theta,float alpha,float a ,float d);
+        class Kinematic: public Interfaces::KinematicBaseInterface{
             public:
-            const Ty_& GetConstParam(const int col,const int row)override;
-            Ty_ & GetParam(const int col,const int row)override;
+            REGISTER_SAMRT_PTR(Kinematic)
+            explicit Kinematic(rclcpp::Node * node);
+            explicit Kinematic();
+            const float& GetConstParam(const int col,const int row)const override;
+            float & GetParam(const int col,const int row)override;
             bool SolveIK(Eigen::Matrix4f pose,Solutions &solutions)override;
             bool SolveFk(Eigen::Matrix4f pose,const Solutions solutions)override;
             private:
             bool SolveWristPart(Eigen::Matrix4f pose,Solutions &solutions);
-            Eigen::Matrix4f FrameRealtionShip(float theta,float alpha,float a ,float d);
             protected:
-            Ty_ DH_Table[6][4];
+            float DH_Table[6][4];
+            rclcpp::Node * node_;
         };
     }
 }
