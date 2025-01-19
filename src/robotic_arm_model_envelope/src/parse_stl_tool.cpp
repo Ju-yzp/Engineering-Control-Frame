@@ -28,16 +28,21 @@ void Parser::ParseBinary(const std::string file_path){
     traingles_.reserve(num_);
     //循环读取数据，保存至traingles_
     for(int loop_count_ = 0 ; loop_count_ < num_ ;loop_count_++){
-        Traingle traingle_;
+        Eigen::Vector3f data;
+        // Traingle traingle_;
         float point_value_[3];
+        ifs_.read((char *)(&point_value_[0]),float_type_size_);
+        ifs_.read((char *)(&point_value_[1]),float_type_size_);
+        ifs_.read((char *)(&point_value_[2]),float_type_size_);
         for(int i = 0 ; i < 3;i++){
             ifs_.read((char *)(&point_value_[0]),float_type_size_);
             ifs_.read((char *)(&point_value_[1]),float_type_size_);
             ifs_.read((char *)(&point_value_[2]),float_type_size_);
-            // std::cout<<"data "<<point_value_[0]<<" "<<point_value_[1]<<" "<<point_value_[2]<<std::endl;
-            traingle_.vectex[i] = cv::Point3f(point_value_[0],point_value_[1],point_value_[2]);
+            std::cout<<loop_count_<<" "<< i<<"data "<<point_value_[0]<<" "<<point_value_[1]<<" "<<point_value_[2]<<std::endl;
+            data<<point_value_[0],point_value_[1],point_value_[2];
+            traingles_.emplace_back(data);
         }
-        traingles_.emplace_back(traingle_);
+        
     }
     ifs_.close();
 }

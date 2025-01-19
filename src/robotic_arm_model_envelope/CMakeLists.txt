@@ -16,7 +16,8 @@ find_package(OpenCV REQUIRED)
 
 add_executable(parse_stl_tool
 ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
-${CMAKE_CURRENT_SOURCE_DIR}/src/parse_stl_tool.cpp)
+${CMAKE_CURRENT_SOURCE_DIR}/src/parse_stl_tool.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/math_library/principal_components_analysis.cpp)
 
 
 if(MSVC)

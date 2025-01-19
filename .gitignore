@@ -2,3 +2,5 @@ src/robotic_arm_model_envelope/.cache/
 .vscode/
 build/
 .cache/
+install/
+log/
