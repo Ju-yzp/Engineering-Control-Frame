@@ -13,82 +13,60 @@
 # limitations under the License.
 
 import os
-
-from ament_index_python.packages import get_package_share_directory
-
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
-from launch.actions import IncludeLaunchDescription#, RegisterEventHandlerExecuteProcess, 
-# from launch.event_handlers import OnProcessExit
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-
+from launch.substitutions import Command
 import xacro
-import yaml
-
-
-def load_file(package_name, file_path):
-    package_path = get_package_share_directory(package_name)
-    absolute_file_path = os.path.join(package_path, file_path)
-    try:
-        with open(absolute_file_path, 'r') as file:
-            return file.read()
-    except EnvironmentError:
-        # parent of IOError, OSError *and* WindowsError where available
-        return None
-
-
-def load_yaml(package_name, file_path):
-    package_path = get_package_share_directory(package_name)
-    absolute_file_path = os.path.join(package_path, file_path)
-    try:
-        with open(absolute_file_path, 'r') as file:
-            return yaml.safe_load(file)
-    except EnvironmentError:
-        # parent of IOError, OSError *and* WindowsError where available
-        return None
-
 
 def generate_launch_description():
-    # moveit_cpp.yaml is passed by filename for now since it's node specific
-    rrbot_gazebo = os.path.join(
-        get_package_share_directory('robotic_arm_description'),
-        'worlds',
-        'rrbot.world')
-
-    print(rrbot_gazebo)
-
-    gazebo = IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([os.path.join(
-                    get_package_share_directory('gazebo_ros'), 'launch'), '/gazebo.launch.py']),
-                launch_arguments={'world': rrbot_gazebo}.items(),
-             )
-
-    rrbot_description_path = os.path.join(
-        get_package_share_directory('robotic_arm_description'))
-
-    xacro_file = os.path.join(rrbot_description_path,
-                              'urdf',
-                              'robotic_arm.xacro')
-
-    doc = xacro.parse(open(xacro_file))
+    robot_name_in_model ="Staubli"
+    package_name='robotic_arm_description'
+    urdf_name = "robot_include.urdf.xacro"
+    
+    ld = LaunchDescription()
+    
+    pkg_share = FindPackageShare(package='robotic_arm_description').find('robotic_arm_description')
+    urdf_model_path = os.path.join(pkg_share, f'urdf/{urdf_name}')
+    
+    start_gazebo_cmd =  ExecuteProcess(
+        cmd=['gazebo', '--verbose','-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so'],
+        output='screen')
+    
+    doc = xacro.parse(open(urdf_model_path))
     xacro.process_doc(doc)
-    robot_description_config = doc.toxml()
-    robot_description = {'robot_description': robot_description_config}
+    params = {'robot_description': doc.toxml()}
 
     node_robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
         output='screen',
-        parameters=[robot_description]
+        parameters=[params]
     )
 
-    spawn_entity = Node(package='gazebo_ros', executable='spawn_entity.py',
-                        arguments=['-topic', 'robot_description',
-                                   '-entity', 'rrbot'],
-                        output='screen')
+    # Launch the robot
+    spawn_entity_cmd = Node(
+        package='gazebo_ros', 
+        executable='spawn_entity.py',
+        arguments=['-topic', 'robot_description','-entity', 'robotic_arm_description'], output='screen')
+    
+    
+    joint_broad_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_state_broadcaster"]
+    )
 
-    return LaunchDescription([
-      gazebo,
-      node_robot_state_publisher,
-      spawn_entity
-    ])
+    arm_broad_spawner=Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["arm_controller"]
+    )
+    ld.add_action(start_gazebo_cmd)
+    ld.add_action(node_robot_state_publisher)
+    ld.add_action(spawn_entity_cmd)
+    ld.add_action(joint_broad_spawner)
+    ld.add_action(arm_broad_spawner)
+
+    return ld

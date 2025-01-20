@@ -1,0 +1,5 @@
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="Staubli">
+    <xacro:property name="UrdfPathHead" value="/home/zy_jp/planning_test/src/robotic_arm_description/urdf/"/>
+    <xacro:include filename="${UrdfPathHead}robot.urdf.xacro" />
+    <xacro:include filename="${UrdfPathHead}robot_ros_control.urdf.xacro" />
+</robot>
